@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EIC — Club Dashboard</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">EIC</span>
+      <div>
+        <h1>Entrepreneurship &amp; Innovation Cell</h1>
+        <p>Event tracking &amp; member analytics</p>
+      </div>
+    </div>
+    <span id="lastUpdated" class="muted"></span>
+  </header>
+
+  <main>
+    <section class="kpi-grid" id="kpis" aria-label="Key metrics"></section>
+
+    <section class="panels">
+      <article class="card">
+        <h2>Member growth</h2>
+        <canvas id="growthChart" height="220"></canvas>
+      </article>
+      <article class="card">
+        <h2>Event attendance rate</h2>
+        <canvas id="attendanceChart" height="220"></canvas>
+      </article>
+      <article class="card">
+        <h2>Events by category</h2>
+        <canvas id="categoryChart" height="220"></canvas>
+      </article>
+      <article class="card">
+        <h2>Members by branch</h2>
+        <canvas id="branchChart" height="220"></canvas>
+      </article>
+    </section>
+
+    <section class="panels">
+      <article class="card wide">
+        <div class="card-head">
+          <h2>Events</h2>
+          <select id="categoryFilter" aria-label="Filter events by category">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table id="eventsTable">
+            <thead>
+              <tr><th>Date</th><th>Title</th><th>Category</th><th>Registered</th>
+                <th>Attended</th><th>Rate</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Add an event</h2>
+        <form id="eventForm" class="stack">
+          <label>Title <input name="title" required /></label>
+          <label>Category
+            <select name="category" required>
+              <option>Workshop</option><option>Speaker Session</option>
+              <option>Pitch Night</option><option>Hackathon</option>
+              <option>Networking</option><option>Bootcamp</option>
+            </select>
+          </label>
+          <label>Date <input name="date" type="date" required /></label>
+          <label>Capacity <input name="capacity" type="number" min="1" value="60" /></label>
+          <button type="submit">Create event</button>
+          <p id="formMsg" class="muted"></p>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="muted">
+    Demo data is generated in-memory. REST API: <code>/api/stats/overview</code>,
+    <code>/api/events</code>, <code>/api/members</code> &hellip;
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
