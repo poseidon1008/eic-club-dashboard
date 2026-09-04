@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EIC — Attendance Scan</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">EIC</span>
+      <div>
+        <h1>Entrepreneurship &amp; Innovation Cell</h1>
+        <p>RFID attendance scan</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="/">Overview</a>
+      <a href="/members.html">Members</a>
+      <a href="/attendance.html" class="active">Attendance scan</a>
+    </nav>
+    <span id="lastUpdated" class="muted"></span>
+  </header>
+
+  <main>
+    <section class="panels">
+      <article class="card wide">
+        <div class="card-head">
+          <h2>Scan cards for a meeting</h2>
+          <label class="muted" style="display:flex; align-items:center; gap:.5rem">
+            Meeting
+            <select id="eventSelect" aria-label="Select meeting/event"></select>
+          </label>
+        </div>
+
+        <input id="scanInput" class="scan-input" type="text" autocomplete="off"
+               placeholder="Tap or scan an RFID card…" aria-label="RFID scan input" autofocus />
+        <p class="scan-hint muted">
+          Hold this page open on the check-in laptop. A USB RFID reader types the
+          card's ID and presses Enter automatically — nothing else to do.
+        </p>
+        <div id="toast"></div>
+      </article>
+    </section>
+
+    <section class="panels">
+      <article class="card">
+        <h2>Checked in</h2>
+        <p class="big-count"><span id="checkinCount">0</span> <span class="muted" style="font-size:1rem">members</span></p>
+        <div id="checkinList" class="table-wrap" style="margin-top:.8rem"></div>
+      </article>
+
+      <article class="card">
+        <h2>No reader handy? Simulate a tap</h2>
+        <p class="muted">Demo mode — picks a member and checks them in as if their
+          card had been scanned, without needing physical RFID hardware.</p>
+        <div class="demo-tap" style="margin-top:.8rem">
+          <select id="memberPicker" aria-label="Choose a member to simulate"></select>
+          <button id="simulateBtn" type="button">Simulate tap</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="muted">
+    Demo data is generated in-memory. REST API: <code>/api/attendance/scan</code>,
+    <code>/api/attendance/simulate</code>, <code>/api/attendance/:eventId</code>
+  </footer>
+
+  <script src="/js/attendance.js"></script>
+</body>
+</html>

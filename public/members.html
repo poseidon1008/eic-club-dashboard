@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EIC — Members</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">EIC</span>
+      <div>
+        <h1>Entrepreneurship &amp; Innovation Cell</h1>
+        <p>Member directory</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="/">Overview</a>
+      <a href="/members.html" class="active">Members</a>
+      <a href="/attendance.html">Attendance scan</a>
+    </nav>
+    <span id="lastUpdated" class="muted"></span>
+  </header>
+
+  <main>
+    <section class="panels">
+      <article class="card wide">
+        <div class="card-head">
+          <h2>Members</h2>
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap">
+            <input id="searchBox" type="search" placeholder="Search by name…" aria-label="Search members by name" />
+            <select id="branchFilter" aria-label="Filter by branch"><option value="">All branches</option></select>
+            <select id="roleFilter" aria-label="Filter by role"><option value="">All roles</option></select>
+            <select id="activeFilter" aria-label="Filter by active status">
+              <option value="">Active + inactive</option>
+              <option value="true">Active only</option>
+              <option value="false">Inactive only</option>
+            </select>
+          </div>
+        </div>
+        <p class="muted" id="resultCount"></p>
+        <div class="table-wrap">
+          <table id="membersTable">
+            <thead>
+              <tr><th>Name</th><th>Branch</th><th>Year</th><th>Role</th><th>Joined</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Add a member</h2>
+        <form id="memberForm" class="stack">
+          <label>Name <input name="name" required /></label>
+          <label>Branch
+            <select name="branch" required>
+              <option>CSE</option><option>ECE</option><option>MECH</option>
+              <option>CIVIL</option><option>MBA</option><option>DESIGN</option>
+            </select>
+          </label>
+          <label>Year <input name="year" type="number" min="1" max="4" value="1" /></label>
+          <label>Role
+            <select name="role">
+              <option>Member</option><option>Core</option><option>Lead</option>
+            </select>
+          </label>
+          <button type="submit">Add member</button>
+          <p id="formMsg" class="muted"></p>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="muted">
+    Demo data is generated in-memory. REST API: <code>/api/members</code>
+  </footer>
+
+  <script src="/js/members.js"></script>
+</body>
+</html>

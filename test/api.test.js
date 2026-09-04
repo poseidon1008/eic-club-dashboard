@@ -59,3 +59,57 @@ test('GET /api/members supports branch + active filters', async () => {
   const res = await (await fetch(`${base}/api/members?branch=cse&active=true`)).json();
   assert.ok(res.members.every((m) => m.branch === 'CSE' && m.active === true));
 });
+
+test('POST /api/attendance/simulate checks a member in, then GET reflects it', async () => {
+  const { events } = await (await fetch(`${base}/api/events`)).json();
+  const eventId = events[0].id;
+  const { members } = await (await fetch(`${base}/api/members`)).json();
+  const memberId = members[0].id;
+
+  const scan = await fetch(`${base}/api/attendance/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId, memberId }),
+  });
+  assert.equal(scan.status, 201);
+  const body = await scan.json();
+  assert.equal(body.status, 'ok');
+  assert.equal(body.member.id, memberId);
+
+  const log = await (await fetch(`${base}/api/attendance/${eventId}`)).json();
+  assert.equal(log.count, 1);
+  assert.equal(log.checkins[0].memberId, memberId);
+});
+
+test('POST /api/attendance/simulate reports a duplicate scan instead of double-counting', async () => {
+  const { events } = await (await fetch(`${base}/api/events`)).json();
+  const eventId = events[1].id;
+  const { members } = await (await fetch(`${base}/api/members`)).json();
+  const memberId = members[1].id;
+  const body = { eventId, memberId };
+  const headers = { 'Content-Type': 'application/json' };
+
+  const first = await fetch(`${base}/api/attendance/simulate`, { method: 'POST', headers, body: JSON.stringify(body) });
+  assert.equal(first.status, 201);
+  const second = await fetch(`${base}/api/attendance/simulate`, { method: 'POST', headers, body: JSON.stringify(body) });
+  assert.equal(second.status, 200);
+  assert.equal((await second.json()).status, 'duplicate');
+
+  const log = await (await fetch(`${base}/api/attendance/${eventId}`)).json();
+  assert.equal(log.count, 1);
+});
+
+test('POST /api/attendance/scan rejects an unknown tag and a missing event', async () => {
+  const { events } = await (await fetch(`${base}/api/events`)).json();
+  const headers = { 'Content-Type': 'application/json' };
+
+  const badTag = await fetch(`${base}/api/attendance/scan`, {
+    method: 'POST', headers, body: JSON.stringify({ eventId: events[0].id, rfidTag: 'NOPE1234' }),
+  });
+  assert.equal(badTag.status, 404);
+
+  const badEvent = await fetch(`${base}/api/attendance/scan`, {
+    method: 'POST', headers, body: JSON.stringify({ eventId: 999999, rfidTag: 'AAAAAAAA' }),
+  });
+  assert.equal(badEvent.status, 404);
+});

@@ -29,6 +29,14 @@ code { background: var(--brand-soft); padding: .1em .4em; border-radius: 4px; fo
   border-bottom: 1px solid var(--line); flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: .9rem; }
+
+.nav { display: flex; gap: .3rem; margin-left: auto; }
+.nav a {
+  padding: .5rem .8rem; border-radius: 8px; font-size: .88rem; font-weight: 600;
+  color: var(--muted); text-decoration: none;
+}
+.nav a:hover { background: var(--brand-soft); color: var(--brand); }
+.nav a.active { background: var(--brand); color: #fff; }
 .logo {
   display: grid; place-items: center; width: 46px; height: 46px;
   border-radius: 12px; background: var(--brand); color: #fff;
@@ -86,3 +94,43 @@ tbody tr:hover { background: #f8faff; }
 .rate-warn { color: var(--warn); font-weight: 600; }
 
 footer { max-width: 1180px; margin: 0 auto; padding: 0 1.6rem 2rem; }
+
+/* ---------- attendance scan page ---------- */
+
+.scan-input {
+  width: 100%; font-size: 1.4rem; letter-spacing: .08em; text-align: center;
+  padding: .9rem; border: 2px dashed var(--brand); border-radius: 10px;
+  background: var(--brand-soft); color: var(--ink);
+}
+.scan-input:focus { outline: none; border-style: solid; }
+.scan-hint { text-align: center; margin-top: .5rem; }
+
+.badge {
+  display: inline-block; padding: .15rem .55rem; border-radius: 999px;
+  font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.badge-ok { background: #dcfce7; color: var(--good); }
+.badge-dup { background: #fef3c7; color: var(--warn); }
+.badge-err { background: #fee2e2; color: #dc2626; }
+
+.toast {
+  padding: .8rem 1rem; border-radius: 10px; font-weight: 600; margin-top: 1rem;
+  border: 1px solid transparent;
+}
+.toast-ok { background: #dcfce7; color: #14532d; border-color: #bbf7d0; }
+.toast-dup { background: #fef3c7; color: #713f12; border-color: #fde68a; }
+.toast-err { background: #fee2e2; color: #7f1d1d; border-color: #fecaca; }
+
+.checkin-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem .2rem; border-bottom: 1px solid var(--line); font-size: .9rem;
+}
+.checkin-row:last-child { border-bottom: none; }
+.checkin-row .who { display: flex; flex-direction: column; }
+.checkin-row .who .name { font-weight: 600; }
+.checkin-row .time { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+
+.demo-tap { display: flex; gap: .5rem; flex-wrap: wrap; }
+.demo-tap select { flex: 1; min-width: 180px; }
+
+.big-count { font-size: 2.4rem; font-weight: 700; }

@@ -9,6 +9,11 @@ import {
   eventCategories,
   branchBreakdown,
   nextId,
+  createMember,
+  publicMember,
+  scanCheckIn,
+  simulateCheckIn,
+  eventCheckins,
 } from '../data/store.js';
 
 const router = Router();
@@ -22,7 +27,7 @@ router.get('/members', (req, res) => {
   if (role) rows = rows.filter((m) => m.role.toLowerCase() === role.toLowerCase());
   if (active === 'true') rows = rows.filter((m) => m.active);
   if (active === 'false') rows = rows.filter((m) => !m.active);
-  res.json({ count: rows.length, members: rows });
+  res.json({ count: rows.length, members: rows.map(publicMember) });
 });
 
 router.post('/members', (req, res) => {
@@ -30,17 +35,8 @@ router.post('/members', (req, res) => {
   if (!name || !branch) {
     return res.status(400).json({ error: 'name and branch are required' });
   }
-  const member = {
-    id: nextId(db.members),
-    name: String(name),
-    branch: String(branch).toUpperCase(),
-    year: Number(year) || 1,
-    role: role || 'Member',
-    joinedAt: new Date().toISOString().slice(0, 10),
-    active: true,
-  };
-  db.members.push(member);
-  res.status(201).json(member);
+  const member = createMember({ name, branch, year, role });
+  res.status(201).json(publicMember(member));
 });
 
 /* ---------- events ---------- */
@@ -80,6 +76,49 @@ router.post('/events', (req, res) => {
   db.events.push(event);
   db.events.sort((a, b) => a.date.localeCompare(b.date));
   res.status(201).json(event);
+});
+
+/* ---------- attendance (RFID scan) ---------- */
+
+const SCAN_STATUS_HTTP = {
+  'event-not-found': 404,
+  'unknown-tag': 404,
+  'unknown-member': 404,
+  duplicate: 200,
+  ok: 201,
+};
+
+// Never send a member's RFID tag back over the API — not for the general
+// directory listing, and not in scan/simulate responses either.
+function sanitizeScanResult(result) {
+  return result.member ? { ...result, member: publicMember(result.member) } : result;
+}
+
+router.get('/attendance/:eventId', (req, res) => {
+  const result = eventCheckins(req.params.eventId);
+  if (!result) return res.status(404).json({ error: 'event not found' });
+  res.json(result);
+});
+
+// Real path: a USB RFID reader acts as a keyboard — it types the card's UID
+// then Enter — so the front end just posts whatever landed in a text input.
+router.post('/attendance/scan', (req, res) => {
+  const { eventId, rfidTag } = req.body ?? {};
+  if (!eventId || !rfidTag) {
+    return res.status(400).json({ error: 'eventId and rfidTag are required' });
+  }
+  const result = scanCheckIn(eventId, rfidTag);
+  res.status(SCAN_STATUS_HTTP[result.status] ?? 400).json(sanitizeScanResult(result));
+});
+
+// Demo path: simulate a card tap by member id, for testing without hardware.
+router.post('/attendance/simulate', (req, res) => {
+  const { eventId, memberId } = req.body ?? {};
+  if (!eventId || !memberId) {
+    return res.status(400).json({ error: 'eventId and memberId are required' });
+  }
+  const result = simulateCheckIn(eventId, memberId);
+  res.status(SCAN_STATUS_HTTP[result.status] ?? 400).json(sanitizeScanResult(result));
 });
 
 /* ---------- analytics ---------- */

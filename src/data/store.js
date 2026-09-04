@@ -40,6 +40,15 @@ const rand = rng(20240828);
 const pick = (arr) => arr[Math.floor(rand() * arr.length)];
 const intBetween = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
 
+// Separate PRNG stream for RFID tags so adding this feature doesn't shift
+// the member/event generation that other stats already depend on.
+const rfidRand = rng(20240902);
+function genRfidTag() {
+  let hex = '';
+  for (let i = 0; i < 8; i++) hex += Math.floor(rfidRand() * 16).toString(16);
+  return hex.toUpperCase();
+}
+
 function monthKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
@@ -64,6 +73,7 @@ function buildMembers(n) {
       role: pick(ROLES),
       joinedAt: joined.toISOString().slice(0, 10),
       active: rand() > 0.22,
+      rfid: genRfidTag(),
     });
   }
   return members;
@@ -100,7 +110,12 @@ function buildEvents(n, memberCount) {
 const members = buildMembers(240);
 const events = buildEvents(28, members.length);
 
-export const db = { members, events };
+// RFID check-ins for the "live meeting" scan feature — kept separate from
+// each event's seeded registered/attended/attendanceRate (those describe
+// historical attendance; check-ins are today's actual door-scan log).
+const checkins = [];
+
+export const db = { members, events, checkins };
 
 /* ---------- analytics helpers ---------- */
 
@@ -167,6 +182,83 @@ export function branchBreakdown() {
 
 export function nextId(collection) {
   return collection.reduce((max, x) => Math.max(max, x.id), 0) + 1;
+}
+
+/** Add a member, assigning an RFID tag the same way seeded members get one. */
+export function createMember({ name, branch, year, role }) {
+  const member = {
+    id: nextId(members),
+    name: String(name),
+    branch: String(branch).toUpperCase(),
+    year: Number(year) || 1,
+    role: role || 'Member',
+    joinedAt: new Date().toISOString().slice(0, 10),
+    active: true,
+    rfid: genRfidTag(),
+  };
+  members.push(member);
+  return member;
+}
+
+/** Strip the RFID tag before a member is sent over the public API. */
+export function publicMember({ rfid, ...rest }) {
+  return rest;
+}
+
+/* ---------- RFID attendance scanning ---------- */
+
+/**
+ * Record a door scan for a meeting/event.
+ * `rfidTag` is whatever a USB RFID reader typed (it behaves as a keyboard —
+ * types the card's UID then Enter), so it's matched case-insensitively.
+ * Returns one of:
+ *   { status: 'event-not-found' }
+ *   { status: 'unknown-tag', tag }
+ *   { status: 'duplicate', member, checkin }   — already scanned for this event
+ *   { status: 'ok', member, checkin }
+ */
+export function scanCheckIn(eventId, rfidTag) {
+  const event = events.find((e) => e.id === Number(eventId));
+  if (!event) return { status: 'event-not-found' };
+
+  const tag = String(rfidTag || '').trim().toUpperCase();
+  const member = members.find((m) => m.rfid === tag);
+  if (!tag || !member) return { status: 'unknown-tag', tag };
+
+  const existing = checkins.find((c) => c.eventId === event.id && c.memberId === member.id);
+  if (existing) return { status: 'duplicate', member, checkin: existing };
+
+  const checkin = {
+    id: nextId(checkins),
+    eventId: event.id,
+    memberId: member.id,
+    memberName: member.name,
+    branch: member.branch,
+    scannedAt: new Date().toISOString(),
+  };
+  checkins.push(checkin);
+  return { status: 'ok', member, checkin };
+}
+
+/**
+ * Demo helper: check a member in by id instead of by scanned tag, so the
+ * dashboard can simulate a card tap without physical RFID hardware. Looks
+ * the member's own tag up server-side and reuses the normal scan path.
+ */
+export function simulateCheckIn(eventId, memberId) {
+  const member = members.find((m) => m.id === Number(memberId));
+  if (!member) return { status: 'unknown-member' };
+  return scanCheckIn(eventId, member.rfid);
+}
+
+export function eventCheckins(eventId) {
+  const id = Number(eventId);
+  const event = events.find((e) => e.id === id);
+  if (!event) return null;
+  const rows = checkins
+    .filter((c) => c.eventId === id)
+    .sort((a, b) => b.scannedAt.localeCompare(a.scannedAt));
+  return { event, count: rows.length, checkins: rows };
 }
 
 export { monthKey };
